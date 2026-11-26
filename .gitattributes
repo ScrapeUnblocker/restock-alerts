@@ -1,0 +1,2 @@
+# Keep line endings stable for the file the workflow commits.
+state/*.json text eol=lf

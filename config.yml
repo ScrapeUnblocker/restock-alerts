@@ -1,0 +1,76 @@
+# restock-alerts: the one file you edit.
+# Secrets (API key, bot tokens, webhook URLs) never go here: see .env.example.
+#
+# Each product below costs 1 API call per run. The workflow runs every 15 minutes, so
+# 5 products = 5 calls per run, 480 per day. Watch fewer products (or run less often in
+# .github/workflows/run.yml) to spend less.
+
+# The products to watch. Paste the product page link; the retailer and product number
+# are read from it. Supported: target.com, bestbuy.com, walmart.com, smythstoys.com (UK),
+# mediamarkt.de/.at/.ch/.nl/.be/.es/.pl/.hu/.com.tr, mediaworld.it and saturn.de.
+#
+#   name:       your label in alerts (default: the retailer's product title)
+#   max_price:  alert only at or below this price, in the shop's currency. Sold-out
+#               items often come back from resellers at 2-3x the price.
+#   channels:   [ship], [pickup] or [ship, pickup] (default: both). Pickup = order
+#               pickup or shelf stock at your store (Target), click & collect (Smyths),
+#               store pickup (Best Buy, Walmart, MediaMarkt).
+#   sold_by_retailer_only: override rules.sold_by_retailer_only for this product.
+#
+# The defaults below are Pokemon TCG trainer boxes, which sell out at list price and
+# come back in small restocks. Swap in the consoles, graphics cards, LEGO sets or
+# sneakers you are after.
+watch:
+  - url: https://www.bestbuy.com/site/-/6645345.p?skuId=6645345
+    name: "Pokemon TCG: Phantasmal Flames Elite Trainer Box"
+    max_price: 60
+
+  - url: https://www.target.com/p/-/A-1014840165
+    name: "Pokemon TCG: Perfect Order Elite Trainer Box"
+    max_price: 60
+
+  - url: https://www.walmart.com/ip/Pokemon-TCG-Mega-Evolution-Perfect-Order-Elite-Trainer-Box/19402160990
+    name: "Pokemon TCG: Perfect Order Elite Trainer Box"
+    max_price: 60
+
+  - url: https://www.smythstoys.com/uk/en-gb/toys/action-figures-and-playsets/pokemon-toys/pokemon-trading-card-game-tcg/pokemon-trading-card-game-tcg-30th-celebration-elite-trainer-box/p/263924
+    name: "Pokemon TCG: 30th Celebration Elite Trainer Box"
+    max_price: 55
+
+  - url: https://www.mediamarkt.de/de/product/_pokemon-12913-me01-mega-entwicklung-top-trainer-box-lucario-3003326.html
+    name: "Pokemon TCG: Mega-Entwicklung Top-Trainer-Box Lucario"
+    max_price: 65
+
+# Target reports pickup and shelf stock for one store, and shipping dates for one ZIP
+# code. Find your store number on target.com/store-locator (the number in the store's
+# link). Default: 1375, Minneapolis Nicollet Mall.
+target:
+  store_id: "1375"
+  zip: "55403"
+
+# The shop used for MediaMarkt products given as retailer + id instead of a link.
+mediamarkt:
+  country: de
+
+rules:
+  # Skip offers from marketplace / third-party sellers (Best Buy Marketplace, Walmart
+  # Marketplace sellers, MediaMarkt Marktplatz). Target and Smyths sell their own stock.
+  sold_by_retailer_only: true
+  # An open pre-order counts as in stock.
+  preorders: true
+  # After an alert, a product must read sold out this many runs in a row before the next
+  # restock alerts again. 2 means one odd "sold out" answer in the middle of a restock
+  # does not cause a second alert.
+  confirm_sold_out: 2
+  # Also post when an alerted product sells out again (with how long it lasted).
+  alert_sold_out: false
+
+delivery:
+  # Every destination listed here whose secrets are set gets each alert.
+  destinations: [telegram, discord, slack, pushover, webhook]
+  # Pushover: -1 quiet, 0 normal, 1 high (skips your Pushover quiet hours).
+  pushover_priority: 1
+
+# Where each product's stock and restock history is kept. The workflow commits it back
+# to the repo when it changes.
+state: state/stock.json
